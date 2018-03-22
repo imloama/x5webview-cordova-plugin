@@ -118,6 +118,8 @@ public class X5WebViewEngine implements CordovaWebViewEngine {
                 X5WebViewEngine.this.cordova.getActivity().runOnUiThread(r);
             }
         }));
+        if(Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN_MR2)
+            nativeToJsMessageQueue.addBridgeMode(new NativeToJsMessageQueue.EvalBridgeMode(this, cordova));
         bridge = new CordovaBridge(pluginManager, nativeToJsMessageQueue);
         exposeJsInterface(webView, bridge);
     }
@@ -146,7 +148,10 @@ public class X5WebViewEngine implements CordovaWebViewEngine {
         final WebSettings settings = webView.getSettings();
         settings.setJavaScriptEnabled(true);
         settings.setJavaScriptCanOpenWindowsAutomatically(true);
-        settings.setLayoutAlgorithm(LayoutAlgorithm.NORMAL);
+        settings.setLayoutAlgorithm(WebSettings.LayoutAlgorithm.NORMAL);
+        settings.setRenderPriority(WebSettings.RenderPriority.HIGH);
+        settings.setPluginState(WebSettings.PluginState.ON_DEMAND);
+ 	 
 
         // Set the nav dump for HTC 2.x devices (disabling for ICS, deprecated entirely for Jellybean 4.2)
         try {
@@ -355,7 +360,9 @@ public class X5WebViewEngine implements CordovaWebViewEngine {
             @Override
             public void onReceiveValue(Object o) {
                 if(o instanceof String)
-                    proxyCallback.onReceiveValue((String) o);
+                    if (proxyCallback != null) {
+                        proxyCallback.onReceiveValue((String) o);
+                    }
             }
         };
         webView.evaluateJavascript(js,mCallback);
